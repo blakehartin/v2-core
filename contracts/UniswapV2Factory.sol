@@ -1,9 +1,9 @@
-pragma solidity =0.5.16;
+pragma solidity =0.7.6;
 
 import './interfaces/IUniswapV2Factory.sol';
 import './UniswapV2Pair.sol';
 
-contract UniswapV2Factory is IUniswapV2Factory {
+contract UniswapV2Factory {
     address public feeTo;
     address public feeToSetter;
 

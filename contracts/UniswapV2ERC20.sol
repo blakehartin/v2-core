@@ -1,9 +1,9 @@
-pragma solidity =0.5.16;
+pragma solidity =0.7.6;
 
 import './interfaces/IUniswapV2ERC20.sol';
 import './libraries/SafeMath.sol';
 
-contract UniswapV2ERC20 is IUniswapV2ERC20 {
+contract UniswapV2ERC20 {
     using SafeMath for uint;
 
     string public constant name = 'Uniswap V2';
@@ -15,7 +15,7 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
 
     bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
-    bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
+    bytes32 public constant PERMIT_TYPEHASH = bytes32(0x6E71edaE12b1b97f4D1f60370fEf10105fA2faae0126114A169c64845D6126C9);
     mapping(address => uint) public nonces;
 
     event Approval(address indexed owner, address indexed spender, uint value);
@@ -24,7 +24,7 @@ contract UniswapV2ERC20 is IUniswapV2ERC20 {
     constructor() public {
         uint chainId;
         assembly {
-            chainId := chainid
+            chainId := chainid()
         }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
