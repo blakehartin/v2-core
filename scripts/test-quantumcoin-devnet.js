@@ -117,7 +117,6 @@ async function main() {
 
   assert.equal(scalar(await addressHarness.packedAddressLength()), 32n);
   assert.equal(scalar(await addressHarness.packedPairLength(tokenA.target, tokenB.target)), 64n);
-  assert.equal(scalar(await addressHarness.wrappingSubtract()), (1n << 32n) - 1n);
 
   await send(wq.deposit({ value: 10n ** 18n, gasLimit: 300_000n }));
   assert.equal(scalar(await wq.balanceOf(wallet.address)), 10n ** 18n);

@@ -69,40 +69,15 @@ contract UniswapV2Pair is UniswapV2ERC20 {
         token1 = _token1;
     }
 
-    /*
-     * QuantumCoin production-audit change:
-     * - Compute the uint32 timestamp delta with wrapping assembly because the
-     *   QuantumCoin 0.7.6 compiler checks subtraction, while Uniswap V2
-     *   intentionally wraps this value when the 32-bit timestamp rolls over.
-     * - Add cumulative-price increments with wrapping assembly for the same
-     *   reason. These counters are intentionally modulo 2**256 in the original
-     *   Uniswap V2 oracle design.
-     *
-     * Without these changes, reserve updates and swaps would eventually revert
-     * at a timestamp or cumulative-price rollover.
-     */
     // update reserves and, on the first call per block, price accumulators
     function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
         require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
         uint32 blockTimestamp = uint32(block.timestamp % 2**32);
-        uint32 blockTimestampPrevious = blockTimestampLast;
-        uint timeElapsedWrapped;
-        assembly {
-            timeElapsedWrapped := and(sub(blockTimestamp, blockTimestampPrevious), 0xffffffff)
-        }
-        uint32 timeElapsed = uint32(timeElapsedWrapped); // overflow is desired
+        uint32 timeElapsed = blockTimestamp - blockTimestampLast; // overflow is desired
         if (timeElapsed > 0 && _reserve0 != 0 && _reserve1 != 0) {
             // * never overflows, and + overflow is desired
-            uint price0Increment = uint(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
-            uint price1Increment = uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
-            uint price0Cumulative = price0CumulativeLast;
-            uint price1Cumulative = price1CumulativeLast;
-            assembly {
-                price0Cumulative := add(price0Cumulative, price0Increment)
-                price1Cumulative := add(price1Cumulative, price1Increment)
-            }
-            price0CumulativeLast = price0Cumulative;
-            price1CumulativeLast = price1Cumulative;
+            price0CumulativeLast += uint(UQ112x112.encode(_reserve1).uqdiv(_reserve0)) * timeElapsed;
+            price1CumulativeLast += uint(UQ112x112.encode(_reserve0).uqdiv(_reserve1)) * timeElapsed;
         }
         reserve0 = uint112(balance0);
         reserve1 = uint112(balance1);
