@@ -1,8 +1,10 @@
+// This contract is part of QuantumSwap V2, a modified fork of Uniswap V2 (https://github.com/Uniswap/v2-core)
+// adapted for the QuantumCoin blockchain. Modified from the original; see repository history for changes.
 pragma solidity =0.7.6;
 
 import './libraries/SafeMath.sol';
 
-contract UniswapV2ERC20 {
+contract QuantumSwapV2ERC20 {
     using SafeMath for uint;
 
     string public constant name = 'QuantumSwap V2';

@@ -1,27 +1,33 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { execFileSync } = require("node:child_process");
 
-const sdkPath = process.env.QUANTUMCOIN_JS_PATH || "C:\\github\\quantumcoin.js";
-const qc = require(sdkPath);
-const { Initialize, Config } = require(path.join(sdkPath, "config"));
+const qc = require("quantumcoin");
+const { Initialize, Config } = require("quantumcoin/config");
+const qcSolc = require("./qc-solc");
 
 const rpcUrl = process.env.QC_RPC_URL || "http://127.0.0.1:18545";
 const chainId = Number(process.env.QC_CHAIN_ID || 123123);
-const solc = process.env.QC_SOLC_PATH || "C:\\solc\\solc.exe";
 const password = process.env.QC_KEY_PASSWORD || "QuantumCoinExample123!";
-const keystore = process.env.QC_KEYSTORE;
-
-if (!keystore) {
-  throw new Error("QC_KEYSTORE must point to the funded public devnet keystore");
-}
 
 const coreRoot = path.resolve(__dirname, "..");
 const quantumswapRoot = path.resolve(coreRoot, "..");
 const githubRoot = path.resolve(quantumswapRoot, "..");
 const deployRoot = path.join(quantumswapRoot, "quantumswap-deploy");
 const peripheryRoot = path.join(quantumswapRoot, "v2-periphery");
+
+const FUNDED_ACCOUNT = "1a846abe71c8b989e8337c55d608be81c28ab3b2e40c83eaa2a68d516049aec6";
+function findKeystore() {
+  if (process.env.QC_KEYSTORE) return process.env.QC_KEYSTORE;
+  const devnetDir =
+    process.env.QC_DEVNET_DIR ||
+    (process.platform === "win32" ? "C:\\devnet" : path.join(require("node:os").homedir(), "quantumcoin-devnet"));
+  for (const candidate of [path.join(devnetDir, FUNDED_ACCOUNT, FUNDED_ACCOUNT), path.join(devnetDir, FUNDED_ACCOUNT)]) {
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) return candidate;
+  }
+  throw new Error("No devnet keystore found; set QC_KEYSTORE");
+}
+const keystore = findKeystore();
 
 function readArtifact(relativeDirectory, name) {
   const directory = path.join(deployRoot, "contracts", relativeDirectory);
@@ -32,26 +38,10 @@ function readArtifact(relativeDirectory, name) {
 }
 
 function compileContract(source, contractName, extraSources = []) {
-  const args = [
-    "--optimize",
-    "--optimize-runs",
-    "999999",
-    "--metadata-hash",
-    "none",
-    "--combined-json",
-    "abi,bin",
-    source,
-    ...extraSources,
-    `@uniswap/v2-core=${coreRoot}`,
-    `@uniswap/lib=${path.join(githubRoot, "solidity-lib")}`,
-  ];
-  const output = JSON.parse(execFileSync(solc, args, { encoding: "utf8", cwd: coreRoot }));
-  const key = Object.keys(output.contracts).find((candidate) => candidate.endsWith(`:${contractName}`));
-  if (!key) throw new Error(`solc output missing ${contractName}`);
-  return {
-    abi: JSON.parse(output.contracts[key].abi),
-    bytecode: `0x${output.contracts[key].bin}`,
-  };
+  return qcSolc.compileContract(source, contractName, [
+    `@quantumswap/v2-core=${coreRoot}`,
+    `@quantumcoin/solidity-lib=${path.join(githubRoot, "solidity-lib")}`,
+  ], extraSources);
 }
 
 async function deploy(wallet, provider, artifact, args = []) {
@@ -89,19 +79,12 @@ async function main() {
   const wallet = qc.Wallet.fromEncryptedJsonSync(fs.readFileSync(keystore, "utf8"), password, provider);
 
   const wqArtifact = readArtifact("wq", "WQ");
-  const factoryArtifact = readArtifact("corev2", "UniswapV2Factory");
-  const routerArtifact = readArtifact("v2swaprouter", "UniswapV2Router02");
+  const factoryArtifact = readArtifact("corev2", "QuantumSwapV2Factory");
+  const routerArtifact = readArtifact("v2swaprouter", "QuantumSwapV2Router02");
   const pairAbi = JSON.parse(
-    fs.readFileSync(path.join(deployRoot, "contracts", "corev2", "UniswapV2Pair.abi"), "utf8"),
+    fs.readFileSync(path.join(deployRoot, "contracts", "corev2", "QuantumSwapV2Pair.abi"), "utf8"),
   );
-  const tokenArtifact = compileContract(
-    path.join(coreRoot, "contracts", "test", "ERC20.sol"),
-    "ERC20",
-    [
-      path.join(coreRoot, "contracts", "UniswapV2ERC20.sol"),
-      path.join(coreRoot, "contracts", "libraries", "SafeMath.sol"),
-    ],
-  );
+  const tokenArtifact = compileContract(path.join(coreRoot, "contracts", "test", "ERC20.sol"), "ERC20");
   const addressArtifact = compileContract(
     path.join(peripheryRoot, "contracts", "test", "QuantumAddressTest.sol"),
     "QuantumAddressTest",
