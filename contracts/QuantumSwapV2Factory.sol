@@ -5,27 +5,24 @@ pragma solidity =0.7.6;
 import './interfaces/IQuantumSwapV2Factory.sol';
 import './QuantumSwapV2Pair.sol';
 
-contract QuantumSwapV2Factory {
-    address public feeTo;
-    address public feeToSetter;
+contract QuantumSwapV2Factory is IQuantumSwapV2Factory {
+    address public override feeTo;
+    address public override feeToSetter;
 
-    mapping(address => mapping(address => address)) public getPair;
-    address[] public allPairs;
+    mapping(address => mapping(address => address)) public override getPair;
+    address[] public override allPairs;
 
-    bytes32 public constant INIT_CODE_HASH = keccak256(abi.encodePacked(type(QuantumSwapV2Pair).creationCode));
-
-
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
+    bytes32 public constant override INIT_CODE_HASH = keccak256(abi.encodePacked(type(QuantumSwapV2Pair).creationCode));
 
     constructor(address _feeToSetter) public {
         feeToSetter = _feeToSetter;
     }
 
-    function allPairsLength() external view returns (uint) {
+    function allPairsLength() external view override returns (uint) {
         return allPairs.length;
     }
 
-    function createPair(address tokenA, address tokenB) external returns (address pair) {
+    function createPair(address tokenA, address tokenB) external override returns (address pair) {
         require(tokenA != tokenB, 'QuantumSwapV2: IDENTICAL_ADDRESSES');
         (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
         require(token0 != address(0), 'QuantumSwapV2: ZERO_ADDRESS');
@@ -42,12 +39,12 @@ contract QuantumSwapV2Factory {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function setFeeTo(address _feeTo) external {
+    function setFeeTo(address _feeTo) external override {
         require(msg.sender == feeToSetter, 'QuantumSwapV2: FORBIDDEN');
         feeTo = _feeTo;
     }
 
-    function setFeeToSetter(address _feeToSetter) external {
+    function setFeeToSetter(address _feeToSetter) external override {
         require(msg.sender == feeToSetter, 'QuantumSwapV2: FORBIDDEN');
         feeToSetter = _feeToSetter;
     }

@@ -1,22 +1,10 @@
 // This contract is part of QuantumSwap V2, a modified fork of Uniswap V2 (https://github.com/Uniswap/v2-core)
 // adapted for the QuantumCoin blockchain. Modified from the original; see repository history for changes.
-pragma solidity >=0.5.0;
+pragma solidity =0.7.6;
 
-interface IQuantumSwapV2Pair {
-    event Approval(address indexed owner, address indexed spender, uint value);
-    event Transfer(address indexed from, address indexed to, uint value);
+import './IQuantumSwapV2ERC20.sol';
 
-    function name() external pure returns (string memory);
-    function symbol() external pure returns (string memory);
-    function decimals() external pure returns (uint8);
-    function totalSupply() external view returns (uint);
-    function balanceOf(address owner) external view returns (uint);
-    function allowance(address owner, address spender) external view returns (uint);
-
-    function approve(address spender, uint value) external returns (bool);
-    function transfer(address to, uint value) external returns (bool);
-    function transferFrom(address from, address to, uint value) external returns (bool);
-
+interface IQuantumSwapV2Pair is IQuantumSwapV2ERC20 {
     event Mint(address indexed sender, uint amount0, uint amount1);
     event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
     event Swap(
@@ -29,7 +17,7 @@ interface IQuantumSwapV2Pair {
     );
     event Sync(uint112 reserve0, uint112 reserve1);
 
-    function MINIMUM_LIQUIDITY() external pure returns (uint);
+    function MINIMUM_LIQUIDITY() external view returns (uint);
     function factory() external view returns (address);
     function token0() external view returns (address);
     function token1() external view returns (address);

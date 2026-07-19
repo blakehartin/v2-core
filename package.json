@@ -1,6 +1,6 @@
 {
   "name": "@quantumswap/v2-core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Core contracts for the QuantumSwap V2 protocol on the QuantumCoin blockchain (modified fork of @uniswap/v2-core)",
   "license": "GPL-3.0-or-later",
   "files": [
