@@ -1,13 +1,12 @@
 pragma solidity =0.7.6;
 
-import './interfaces/IUniswapV2ERC20.sol';
 import './libraries/SafeMath.sol';
 
 contract UniswapV2ERC20 {
     using SafeMath for uint;
 
-    string public constant name = 'Uniswap V2';
-    string public constant symbol = 'UNI-V2';
+    string public constant name = 'QuantumSwap V2';
+    string public constant symbol = 'QSWAP-V2';
     uint8 public constant decimals = 18;
     uint  public totalSupply;
     mapping(address => uint) public balanceOf;
@@ -15,13 +14,6 @@ contract UniswapV2ERC20 {
 
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
-
-    constructor() public {
-        uint chainId;
-        assembly {
-            chainId := chainid()
-        }
-    }
 
     function _mint(address to, uint value) internal {
         totalSupply = totalSupply.add(value);
