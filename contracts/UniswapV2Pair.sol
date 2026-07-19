@@ -69,6 +69,18 @@ contract UniswapV2Pair is UniswapV2ERC20 {
         token1 = _token1;
     }
 
+    /*
+     * QuantumCoin production-audit change:
+     * - Compute the uint32 timestamp delta with wrapping assembly because the
+     *   QuantumCoin 0.7.6 compiler checks subtraction, while Uniswap V2
+     *   intentionally wraps this value when the 32-bit timestamp rolls over.
+     * - Add cumulative-price increments with wrapping assembly for the same
+     *   reason. These counters are intentionally modulo 2**256 in the original
+     *   Uniswap V2 oracle design.
+     *
+     * Without these changes, reserve updates and swaps would eventually revert
+     * at a timestamp or cumulative-price rollover.
+     */
     // update reserves and, on the first call per block, price accumulators
     function _update(uint balance0, uint balance1, uint112 _reserve0, uint112 _reserve1) private {
         require(balance0 <= uint112(-1) && balance1 <= uint112(-1), 'UniswapV2: OVERFLOW');
